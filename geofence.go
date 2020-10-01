@@ -28,7 +28,7 @@ func GeoFenceCheck(p point, polygon []point) (State, error) {
 			count++
 		}
 	}
-	if count == 0 || count/2 != 0 {
+	if count == 0 || count%2 == 0 {
 		return Outside, nil
 	}
 	return Inside, nil
