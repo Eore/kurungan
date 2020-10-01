@@ -7,30 +7,30 @@ import (
 type geoFenceTest struct {
 	Point          point
 	Polygon        []point
-	ExpectedResult bool
+	ExpectedResult State
 }
 
 var geoFenceTestList = []geoFenceTest{
 	{
 		Point: toPoint(1, 1),
 		Polygon: []point{
-			toPoint(2, 0), toPoint(3, 0), toPoint(3, 2), toPoint(2, 2),
+			toPoint(2, 0), toPoint(3, 0), toPoint(3, 2), toPoint(2, 2), toPoint(2, 0),
 		},
-		ExpectedResult: false,
+		ExpectedResult: Outside,
 	},
 	{
 		Point: toPoint(2, 2),
 		Polygon: []point{
-			toPoint(1, 0), toPoint(3, 0), toPoint(3, 3), toPoint(1, 3),
+			toPoint(1, 0), toPoint(3, 0), toPoint(3, 3), toPoint(1, 3), toPoint(1, 0),
 		},
-		ExpectedResult: true,
+		ExpectedResult: Inside,
 	},
 	{
 		Point: toPoint(2, 2),
 		Polygon: []point{
 			toPoint(30, 10), toPoint(40, 40), toPoint(20, 40), toPoint(10, 20), toPoint(30, 10),
 		},
-		ExpectedResult: false,
+		ExpectedResult: Outside,
 	},
 	{
 		Point: toPoint(106.9683837890625, -6.38490666680392),
@@ -41,7 +41,7 @@ var geoFenceTestList = []geoFenceTest{
 			toPoint(106.82144165039061, -6.504992503919256),
 			toPoint(106.82144165039061, -6.685067300513248),
 		},
-		ExpectedResult: false,
+		ExpectedResult: Outside,
 	},
 	{
 		Point: toPoint(106.9683837890625, -6.38490666680392),
@@ -59,7 +59,7 @@ var geoFenceTestList = []geoFenceTest{
 			toPoint(106.76101684570312, -6.1091493882593895),
 			toPoint(106.71157836914061, -6.114611328564151),
 		},
-		ExpectedResult: false,
+		ExpectedResult: Outside,
 	},
 }
 
@@ -67,7 +67,7 @@ func TestGeoGengeCheck(t *testing.T) {
 	for i, testCase := range geoFenceTestList {
 		res, err := GeoFenceCheck(testCase.Point, testCase.Polygon)
 		if err != nil {
-			t.Errorf("For test case %d, %s", i, err.Error())
+			t.Errorf("For test case %d error : %s", i, err.Error())
 		} else if res != testCase.ExpectedResult {
 			t.Errorf("For test case %d, expected result is %v, got %v", i, testCase.ExpectedResult, res)
 		}

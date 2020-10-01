@@ -1,76 +1,43 @@
 package geofence
 
 import (
-	"math"
 	"math/big"
-)
-
-type direction float64
-
-const (
-	CW  direction = 1
-	EQ  direction = 0
-	CCW direction = -1
 )
 
 type point [2]*big.Float
 type vector [2]point
+type triangle [3]vector
 
 var zero = big.NewFloat(0)
 
+func pointInTriangle(p point, tri triangle) bool {
+	sign := func(p point, v vector) *big.Float {
+		x, y := p[0], p[1]
+		x1, y1 := v[0][0], v[0][1]
+		x2, y2 := v[1][0], v[1][1]
+
+		return new(big.Float).Sub(
+			new(big.Float).Mul(
+				new(big.Float).Sub(y, y1),
+				new(big.Float).Sub(x2, x1),
+			),
+			new(big.Float).Mul(
+				new(big.Float).Sub(x, x1),
+				new(big.Float).Sub(y2, y1),
+			),
+		)
+	}
+
+	check := func(p point, tri triangle) bool {
+		c1 := sign(p, tri[0]).Cmp(zero)
+		c2 := sign(p, tri[1]).Cmp(zero)
+		c3 := sign(p, tri[2]).Cmp(zero)
+		return !(c1 < 0 || c2 < 0 || c3 < 0)
+	}
+
+	return check(p, tri)
+}
+
 func toPoint(x, y float64) point {
 	return point{big.NewFloat(x), big.NewFloat(y)}
-}
-
-func vectorDirection(p point, v vector) direction {
-	x1, y1, x2, y2 := v[0][0], v[0][1], v[1][0], v[1][1]
-	xn, yn := p[0], p[1]
-	n := new(big.Float).Sub(
-		new(big.Float).Mul(
-			new(big.Float).Sub(yn, y1),
-			new(big.Float).Sub(x2, x1),
-		),
-		new(big.Float).Mul(
-			new(big.Float).Sub(xn, x1),
-			new(big.Float).Sub(y2, y1),
-		),
-	)
-	switch {
-	case n.Cmp(zero) == -1:
-		return CW
-	case n.Cmp(zero) == 1:
-		return CCW
-	}
-	return EQ
-}
-
-func normVector(v vector) vector {
-	x1, y1, x2, y2 := v[0][0], v[0][1], v[1][0], v[1][1]
-	n, m := new(big.Float).Sub(x1, zero), new(big.Float).Sub(y1, zero)
-	return vector{
-		{new(big.Float).Sub(x1, n), new(big.Float).Sub(y1, m)},
-		{new(big.Float).Sub(x2, n), new(big.Float).Sub(y2, m)},
-	}
-}
-
-func findAngle(normVectorA, normVectorB vector) float64 {
-	xA, yA, xB, yB := normVectorA[1][0], normVectorA[1][1], normVectorB[1][0], normVectorB[1][1]
-	dotProduct := new(big.Float).Add(new(big.Float).Mul(xA, xB), new(big.Float).Mul(yA, yB))
-	magA := new(big.Float).Sqrt(
-		new(big.Float).Add(
-			new(big.Float).Mul(xA, xA),
-			new(big.Float).Mul(yA, yA),
-		),
-	)
-	magB := new(big.Float).Sqrt(
-		new(big.Float).Add(
-			new(big.Float).Mul(xB, xB),
-			new(big.Float).Mul(yB, yB),
-		),
-	)
-	cosTeta := new(big.Float).Quo(dotProduct, new(big.Float).Mul(magA, magB))
-	cosTetaF64, _ := cosTeta.Float64()
-	teta := math.Acos(cosTetaF64)
-	// return teta * 180 / math.Pi
-	return teta
 }

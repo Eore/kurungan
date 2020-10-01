@@ -2,30 +2,36 @@ package geofence
 
 import "fmt"
 
-func GeoFenceCheck(p point, polygon []point) (bool, error) {
-	var total float32 = 0
-	nPolygonPoints := len(polygon)
-	if !isPointSame(polygon[0], polygon[nPolygonPoints-1]) {
-		return false, fmt.Errorf("Polygon its not closed")
+type State int
+
+const (
+	Outside State = 0
+	Inside  State = 1
+)
+
+func GeoFenceCheck(p point, polygon []point) (State, error) {
+	count := 0
+	l := len(polygon)
+	if !isPointSame(polygon[0], polygon[l-1]) {
+		return Outside, fmt.Errorf("Polygon not closing")
 	}
-	for i := 0; i < nPolygonPoints; i++ {
-		if i > 0 {
-			total = total + findAngleWithDirection(p, polygon[i-1], polygon[i])
+	if l < 3 {
+		return Outside, fmt.Errorf("Is not polygon")
+	}
+	startPoint := polygon[0]
+	for i := 0; i < l-3; i++ {
+		if pointInTriangle(p, triangle{
+			vector{startPoint, polygon[i+1]},
+			vector{polygon[i+1], polygon[i+2]},
+			vector{polygon[i+2], startPoint},
+		}) {
+			count++
 		}
 	}
-	if total == 0 {
-		return false, nil
+	if count == 0 || count/2 != 0 {
+		return Outside, nil
 	}
-	return true, nil
-}
-
-func findAngleWithDirection(pn, p1, p2 point) float32 {
-	rad := findAngle(
-		normVector(vector{pn, p1}),
-		normVector(vector{pn, p2}),
-	)
-	dir := vectorDirection(pn, vector{p1, p2})
-	return float32(rad * float64(dir))
+	return Inside, nil
 }
 
 func isPointSame(p1, p2 point) bool {
