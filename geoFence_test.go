@@ -1,6 +1,8 @@
 package geofence
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"testing"
 )
 
@@ -189,4 +191,57 @@ func TestGeoFenceCheck(t *testing.T) {
 			t.Errorf("For test case %d, expected result is %v, got %v", i, testCase.ExpectedResult, res)
 		}
 	}
+}
+
+type geoPolyFileTest struct {
+	Point          Point
+	PolyFilePath   string
+	ExpectedResult State
+}
+
+var geoPolyFileTestList = []geoPolyFileTest{
+	{
+		Point:          NewPoint(106.91173553466797, -6.269015889070834),
+		PolyFilePath:   "./polygon-test/jakarta.json",
+		ExpectedResult: Outside,
+	},
+	{
+		Point:          NewPoint(106.92212104797363, -6.254682363360378),
+		PolyFilePath:   "./polygon-test/jakarta.json",
+		ExpectedResult: Inside,
+	},
+	{
+		Point:          NewPoint(106.91931612789631, -6.250678317605168),
+		PolyFilePath:   "./polygon-test/jakarta.json",
+		ExpectedResult: Outside,
+	},
+}
+
+func TestGeoPolyFile(t *testing.T) {
+	for i, testCase := range geoPolyFileTestList {
+		data, errRead := readGeoJSON(testCase.PolyFilePath)
+		if errRead != nil {
+			t.Errorf("For test case %d error : %s", i, errRead.Error())
+		}
+		res, err := GeoFenceCheck(testCase.Point, data)
+		if err != nil {
+			t.Errorf("For test case %d error : %s", i, err.Error())
+		} else if res != testCase.ExpectedResult {
+			t.Errorf("For test case %d, expected result is %v, got %v", i, testCase.ExpectedResult, res)
+		}
+	}
+}
+
+func readGeoJSON(path string) ([]Point, error) {
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return []Point{}, err
+	}
+	var data [][2]float64
+	json.Unmarshal(b, &data)
+	var polygon []Point
+	for _, value := range data {
+		polygon = append(polygon, NewPoint(value[0], value[1]))
+	}
+	return polygon, nil
 }
