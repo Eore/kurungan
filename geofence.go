@@ -13,6 +13,10 @@ const (
 	Inside  State = 1
 )
 
+func NewPoint(x, y float64) Point {
+	return Point{big.NewFloat(x), big.NewFloat(y)}
+}
+
 func GeoFenceCheck(p Point, polygon []Point) (State, error) {
 	l := len(polygon)
 	if !isPointSame(polygon[0], polygon[l-1]) {
