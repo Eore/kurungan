@@ -180,7 +180,7 @@ var geoFenceTestList = []geoFenceTest{
 	},
 }
 
-func TestGeoGengeCheck(t *testing.T) {
+func TestGeoFenceCheck(t *testing.T) {
 	for i, testCase := range geoFenceTestList {
 		res, err := GeoFenceCheck(testCase.Point, testCase.Polygon)
 		if err != nil {
